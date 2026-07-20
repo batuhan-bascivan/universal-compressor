@@ -9,6 +9,7 @@ import ConvertAllButton from "@/components/ConvertAllButton";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ModeToggle } from "@/components/mode-toggle";
+
 declare global {
   interface Window {
     electron: {
@@ -19,6 +20,7 @@ declare global {
     };
   }
 }
+
 interface FileToCompress {
   id: string;
   file: File;
@@ -31,6 +33,7 @@ interface FileToCompress {
   outputUrl?: string;
   mediaType?: 'image' | 'video' | 'audio' | 'document';
 }
+
 const Index = () => {
   const [imageFiles, setImageFiles] = useState<FileToCompress[]>([]);
   const [videoFiles, setVideoFiles] = useState<FileToCompress[]>([]);
@@ -43,6 +46,7 @@ const Index = () => {
   const [selectedDocumentLevel, setSelectedDocumentLevel] = useState<string>("50");
 
   const [destinationFolder, setDestinationFolder] = useState<string | null>(null);
+
   const handleSelectDestination = useCallback(async () => {
     if (window.electron && window.electron.selectDirectory) {
       const path = await window.electron.selectDirectory();
@@ -54,7 +58,14 @@ const Index = () => {
       toast.error("Directory selection is not supported in this environment.");
     }
   }, []);
+
   const handleFilesAdded = useCallback((newFiles: File[], mediaType: 'image' | 'video' | 'audio' | 'document') => {
+    const level =
+      mediaType === 'image' ? selectedImageLevel :
+      mediaType === 'video' ? selectedVideoLevel :
+      mediaType === 'audio' ? selectedAudioLevel :
+      selectedDocumentLevel;
+
     const filesToAdd: FileToCompress[] = newFiles.map((file) => ({
       id: crypto.randomUUID(),
       file,
@@ -64,27 +75,25 @@ const Index = () => {
       progress: 0,
       status: 'pending',
       mediaType,
-      outputFormat: 
-        mediaType === 'image' ? selectedImageLevel :
-        mediaType === 'video' ? selectedVideoLevel :
-        mediaType === 'audio' ? selectedAudioLevel :
-        selectedDocumentLevel,
+      outputFormat: level,
     }));
-    if (mediaType === 'image') setImageFiles((prevFiles) => [...prevFiles, ...filesToAdd]);
-    else if (mediaType === 'video') setVideoFiles((prevFiles) => [...prevFiles, ...filesToAdd]);
-    else if (mediaType === 'audio') setAudioFiles((prevFiles) => [...prevFiles, ...filesToAdd]);
-    else setDocumentFiles((prevFiles) => [...prevFiles, ...filesToAdd]);
+
+    if (mediaType === 'image') setImageFiles((prev) => [...prev, ...filesToAdd]);
+    else if (mediaType === 'video') setVideoFiles((prev) => [...prev, ...filesToAdd]);
+    else if (mediaType === 'audio') setAudioFiles((prev) => [...prev, ...filesToAdd]);
+    else setDocumentFiles((prev) => [...prev, ...filesToAdd]);
 
     toast.success(`${newFiles.length} ${mediaType} file(s) added!`);
   }, [selectedImageLevel, selectedVideoLevel, selectedAudioLevel, selectedDocumentLevel]);
 
   const handleRemoveFile = useCallback((fileId: string, mediaType: 'image' | 'video' | 'audio' | 'document') => {
-    if (mediaType === 'image') setImageFiles((prevFiles) => prevFiles.filter((f) => f.id !== fileId));
-    else if (mediaType === 'video') setVideoFiles((prevFiles) => prevFiles.filter((f) => f.id !== fileId));
-    else if (mediaType === 'audio') setAudioFiles((prevFiles) => prevFiles.filter((f) => f.id !== fileId));
-    else setDocumentFiles((prevFiles) => prevFiles.filter((f) => f.id !== fileId));
+    if (mediaType === 'image') setImageFiles((prev) => prev.filter((f) => f.id !== fileId));
+    else if (mediaType === 'video') setVideoFiles((prev) => prev.filter((f) => f.id !== fileId));
+    else if (mediaType === 'audio') setAudioFiles((prev) => prev.filter((f) => f.id !== fileId));
+    else setDocumentFiles((prev) => prev.filter((f) => f.id !== fileId));
     toast.info("File removed.");
   }, []);
+
   const handleFormatChange = useCallback((level: string, mediaType: 'image' | 'video' | 'audio' | 'document') => {
     if (mediaType === 'image') {
       setSelectedImageLevel(level);
@@ -100,6 +109,7 @@ const Index = () => {
       setDocumentFiles((prev) => prev.map((f) => f.status === 'pending' ? { ...f, outputFormat: level } : f));
     }
   }, []);
+
   const compressSingleFile = useCallback(async (fileToProcess: FileToCompress): Promise<FileToCompress> => {
     const updateFileState = (updater: React.SetStateAction<FileToCompress[]>) => {
       if (fileToProcess.mediaType === 'image') setImageFiles(updater);
@@ -110,19 +120,21 @@ const Index = () => {
 
     try {
       updateFileState(prev => prev.map(f => f.id === fileToProcess.id ? { ...f, status: 'converting', progress: 10 } : f));
+
       if (!window.electron) {
         throw new Error("Electron API not available. Preload script failed to load.");
       }
+
       const filePath = window.electron.getFilePath(fileToProcess.file);
       if (!filePath) throw new Error("File path not found. Are you running in Electron?");
+
       updateFileState(prev => prev.map(f => f.id === fileToProcess.id ? { ...f, progress: 50 } : f));
-      
+
       const result = await window.electron.compressFile(filePath, fileToProcess.outputFormat, destinationFolder || undefined);
 
       if (!result.success) throw new Error(result.error || "Compression failed");
 
       return { ...fileToProcess, status: 'completed', progress: 100, outputUrl: result.path };
-
     } catch (error: any) {
       console.error('Compression failed:', error);
       toast.error(`Failed to compress ${fileToProcess.name}: ${error.message}`);
@@ -141,9 +153,7 @@ const Index = () => {
     else { filesToProcess = documentFiles; setFilesState = setDocumentFiles; }
 
     const pendingFiles = filesToProcess.filter(f => f.status === 'pending' || f.status === 'failed');
-
-    const compressionPromises = pendingFiles.map(file => compressSingleFile(file));
-    const results = await Promise.all(compressionPromises);
+    const results = await Promise.all(pendingFiles.map(file => compressSingleFile(file)));
 
     setFilesState(prevFiles =>
       prevFiles.map(oldFile => {
@@ -157,7 +167,7 @@ const Index = () => {
     if (failedCount > 0) {
       toast.error(`${failedCount} ${mediaType} file(s) failed to compress.`);
     } else {
-      toast.success(`${mediaType === 'image' ? 'Image' : mediaType === 'video' ? 'Video' : mediaType === 'audio' ? 'Audio' : 'Document'} compression finished successfully!`);
+      toast.success(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} compression finished successfully!`);
     }
   }, [imageFiles, videoFiles, audioFiles, documentFiles, compressSingleFile]);
 
@@ -186,7 +196,6 @@ const Index = () => {
     onShowInFolder: (fileId: string) => void,
     dragDropLabel: string,
     acceptedFileTypes: string,
-    mediaType: 'image' | 'video' | 'audio' | 'document'
   ) => {
     const hasPendingFiles = files.some(f => f.status === 'pending' || f.status === 'failed');
     return (
@@ -197,7 +206,6 @@ const Index = () => {
             <CompressionSlider
               percentage={selectedFormat}
               onPercentageChange={onFormatChange}
-              label="Target File Size"
             />
           </div>
           <div className="space-y-4">
@@ -228,6 +236,7 @@ const Index = () => {
       </div>
     );
   };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-between p-4 sm:p-8 md:p-12 relative">
       <div className="absolute top-4 right-4 flex gap-2">
@@ -271,61 +280,50 @@ const Index = () => {
 
             <TabsContent value="image" className="mt-8">
               {renderFileSection(
-                imageFiles,
-                selectedImageLevel,
+                imageFiles, selectedImageLevel,
                 (level) => handleFormatChange(level, 'image'),
                 (newFiles) => handleFilesAdded(newFiles, 'image'),
                 () => handleCompressAll('image'),
                 (fileId) => handleRemoveFile(fileId, 'image'),
                 (fileId) => handleShowInFolder(fileId, 'image'),
-                "Drag & Drop Images here",
-                "image/*",
-                'image'
+                "Drag & Drop Images here", "image/*",
               )}
             </TabsContent>
-            
+
             <TabsContent value="video" className="mt-8">
               {renderFileSection(
-                videoFiles,
-                selectedVideoLevel,
+                videoFiles, selectedVideoLevel,
                 (level) => handleFormatChange(level, 'video'),
                 (newFiles) => handleFilesAdded(newFiles, 'video'),
                 () => handleCompressAll('video'),
                 (fileId) => handleRemoveFile(fileId, 'video'),
                 (fileId) => handleShowInFolder(fileId, 'video'),
-                "Drag & Drop Videos here",
-                "video/*",
-                'video'
+                "Drag & Drop Videos here", "video/*",
               )}
             </TabsContent>
 
             <TabsContent value="audio" className="mt-8">
               {renderFileSection(
-                audioFiles,
-                selectedAudioLevel,
+                audioFiles, selectedAudioLevel,
                 (level) => handleFormatChange(level, 'audio'),
                 (newFiles) => handleFilesAdded(newFiles, 'audio'),
                 () => handleCompressAll('audio'),
                 (fileId) => handleRemoveFile(fileId, 'audio'),
                 (fileId) => handleShowInFolder(fileId, 'audio'),
-                "Drag & Drop Audios here",
-                "audio/*",
-                'audio'
+                "Drag & Drop Audios here", "audio/*",
               )}
             </TabsContent>
 
             <TabsContent value="document" className="mt-8">
               {renderFileSection(
-                documentFiles,
-                selectedDocumentLevel,
+                documentFiles, selectedDocumentLevel,
                 (level) => handleFormatChange(level, 'document'),
                 (newFiles) => handleFilesAdded(newFiles, 'document'),
                 () => handleCompressAll('document'),
                 (fileId) => handleRemoveFile(fileId, 'document'),
                 (fileId) => handleShowInFolder(fileId, 'document'),
                 "Drag & Drop Documents here",
-                "application/pdf,text/plain,.doc,.docx,.pptx,.xlsx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                'document'
+                "application/pdf,.doc,.docx,.pptx,.xlsx",
               )}
             </TabsContent>
           </Tabs>
@@ -334,5 +332,5 @@ const Index = () => {
     </div>
   );
 };
-export default Index;
 
+export default Index;

@@ -30,42 +30,41 @@ const DragDropArea: React.FC<DragDropAreaProps> = ({ onFilesAdded, acceptedFileT
     e.dataTransfer.dropEffect = "copy";
   }, []);
 
+  const matchesAcceptedType = useCallback((file: File) => {
+    if (acceptedFileTypes === "*/*") return true;
+    return acceptedFileTypes.split(',').some(type => {
+      const trimmedType = type.trim();
+      // Match by extension (e.g. ".docx", ".pptx")
+      if (trimmedType.startsWith('.')) {
+        return file.name.toLowerCase().endsWith(trimmedType.toLowerCase());
+      }
+      // Match by wildcard MIME (e.g. "image/*")
+      if (trimmedType.endsWith('/*')) {
+        return file.type.startsWith(trimmedType.slice(0, -1));
+      }
+      // Match by exact MIME type
+      return file.type === trimmedType;
+    });
+  }, [acceptedFileTypes]);
+
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
 
-    const droppedFiles = Array.from(e.dataTransfer.files).filter(file => {
-      if (acceptedFileTypes === "*/*") return true;
-      return acceptedFileTypes.split(',').some(type => {
-        const trimmedType = type.trim();
-        if (trimmedType.endsWith('/*')) {
-          return file.type.startsWith(trimmedType.slice(0, -1));
-        }
-        return file.type === trimmedType;
-      });
-    });
+    const droppedFiles = Array.from(e.dataTransfer.files).filter(matchesAcceptedType);
 
     if (droppedFiles.length > 0) {
       onFilesAdded(droppedFiles);
     }
-  }, [onFilesAdded, acceptedFileTypes]);
+  }, [onFilesAdded, matchesAcceptedType]);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || []).filter(file => {
-      if (acceptedFileTypes === "*/*") return true;
-      return acceptedFileTypes.split(',').some(type => {
-        const trimmedType = type.trim();
-        if (trimmedType.endsWith('/*')) {
-          return file.type.startsWith(trimmedType.slice(0, -1));
-        }
-        return file.type === trimmedType;
-      });
-    });
+    const selectedFiles = Array.from(e.target.files || []).filter(matchesAcceptedType);
     if (selectedFiles.length > 0) {
       onFilesAdded(selectedFiles);
     }
-  }, [onFilesAdded, acceptedFileTypes]);
+  }, [onFilesAdded, matchesAcceptedType]);
 
   return (
     <div

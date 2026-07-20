@@ -150,12 +150,21 @@ ipcMain.handle('compress-file', async (_event, filePath, percentageStr, outputDi
                         .videoBitrate(`${videoKbps}k`)
                         .audioBitrate(`${audioKbps}k`)
                         .outputOptions(['-deadline', 'realtime', '-cpu-used', '8']);
-                } else {
+                } else if (ext === 'avi') {
                     command = command
                         .videoCodec('libx264')
+                        .audioCodec('aac')
                         .videoBitrate(`${videoKbps}k`)
                         .audioBitrate(`${audioKbps}k`)
-                        .outputOptions(['-preset fast']);
+                        .outputOptions(['-preset', 'fast']);
+                } else {
+                    // mp4, mkv, mov
+                    command = command
+                        .videoCodec('libx264')
+                        .audioCodec('aac')
+                        .videoBitrate(`${videoKbps}k`)
+                        .audioBitrate(`${audioKbps}k`)
+                        .outputOptions(['-preset', 'fast']);
                 }
                 command
                     .on('end', () => resolve(outputPath))
@@ -167,11 +176,28 @@ ipcMain.handle('compress-file', async (_event, filePath, percentageStr, outputDi
             const minAudioKbps = ext === 'ogg' ? 32 : 8;
             const audioKbps = Math.max(minAudioKbps, Math.floor(aBitrate / 1000));
             await new Promise((resolve, reject) => {
-                let command = ffmpeg(filePath).audioBitrate(`${audioKbps}k`);
-                if (ext === 'ogg') {
-                    command = command.audioCodec('libvorbis');
+                let command = ffmpeg(filePath);
+                if (ext === 'wav') {
+                    // WAV is uncompressed: reduce sample rate based on percentage
+                    const sampleRates = [8000, 16000, 22050, 44100, 48000];
+                    const idx = Math.min(sampleRates.length - 1, Math.floor((percentage / 100) * (sampleRates.length - 1)));
+                    const targetSampleRate = sampleRates[idx];
+                    command = command
+                        .audioCodec('pcm_s16le')
+                        .audioFrequency(targetSampleRate)
+                        .audioChannels(percentage <= 30 ? 1 : 2);
+                } else if (ext === 'ogg') {
+                    command = command
+                        .audioCodec('libvorbis')
+                        .audioBitrate(`${audioKbps}k`);
                 } else if (ext === 'aac' || ext === 'm4a') {
-                    command = command.audioCodec('aac');
+                    command = command
+                        .audioCodec('aac')
+                        .audioBitrate(`${audioKbps}k`);
+                } else {
+                    // mp3 and others
+                    command = command
+                        .audioBitrate(`${audioKbps}k`);
                 }
                 command
                     .on('end', () => resolve(outputPath))
@@ -179,21 +205,11 @@ ipcMain.handle('compress-file', async (_event, filePath, percentageStr, outputDi
                     .save(outputPath);
             });
         } else if (ext === 'pdf') {
-            try {
-                const pdfData = fs.readFileSync(filePath);
-                let compressionLevel = 3;
-                if (percentage <= 25) compressionLevel = 0;
-                else if (percentage <= 50) compressionLevel = 1;
-                else if (percentage <= 75) compressionLevel = 2;
-                const pdfCompressModule = require('pdf-compress');
-                const compressedData = await pdfCompressModule.compress(pdfData, { level: compressionLevel });
-                fs.writeFileSync(outputPath, compressedData);
-            } catch (e) {
-                console.error('pdf-compress error:', e);
-                const pdfData = fs.readFileSync(filePath);
-                const doc = await PDFDocument.load(pdfData);
-                fs.writeFileSync(outputPath, await doc.save({ useObjectStreams: true }));
-            }
+            const pdfData = fs.readFileSync(filePath);
+            const doc = await PDFDocument.load(pdfData, { ignoreEncryption: true });
+            // Re-save with object streams for smaller size
+            const savedPdf = await doc.save({ useObjectStreams: true });
+            fs.writeFileSync(outputPath, savedPdf);
         } else if (officeFormats.includes(ext)) {
             const zip = new JSZip();
             const docArchive = await zip.loadAsync(fs.readFileSync(filePath));
@@ -228,10 +244,10 @@ ipcMain.handle('compress-file', async (_event, filePath, percentageStr, outputDi
             );
         } else {
             outputPath = path.join(finalOutputDir, `${baseName}_compressed.zip`);
+            const archiver = require('archiver');
             await new Promise((resolve, reject) => {
                 const output = fs.createWriteStream(outputPath);
-                const archivePkg = require('archiver');
-                const archive = new archivePkg.ZipArchive({ zlib: { level: 9 } });
+                const archive = archiver('zip', { zlib: { level: 9 } });
                 output.on('close', () => resolve(outputPath));
                 archive.on('error', (err: Error) => reject(err));
                 archive.pipe(output);

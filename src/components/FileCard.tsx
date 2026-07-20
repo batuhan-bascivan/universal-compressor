@@ -48,7 +48,7 @@ const FileCard: React.FC<FileCardProps> = ({
         <div className="flex-grow overflow-hidden">
           <p className="text-sm font-medium truncate text-foreground">{fileName}</p>
           <p className="text-xs text-muted-foreground">
-            To: <span className="font-semibold uppercase text-primary">{outputFormat}</span>
+            Compression: <span className="font-semibold text-primary">{100 - parseInt(outputFormat)}%</span>
           </p>
           {(status === 'uploading' || status === 'converting' || status === 'completed') && (
             <Progress value={progress} className="h-1.5 mt-1" />
