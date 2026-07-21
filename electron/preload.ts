@@ -1,6 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
-
-const electron = require('electron') as typeof import('electron');
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 
 contextBridge.exposeInMainWorld('electron', {
     compressFile: (filePath: string, format: string, outputDir?: string) =>
@@ -9,7 +7,6 @@ contextBridge.exposeInMainWorld('electron', {
     selectDirectory: () => ipcRenderer.invoke('select-directory'),
     getFilePath: (file: File) => {
         try {
-            const webUtils = electron.webUtils || (electron as { default?: { webUtils?: typeof electron.webUtils } }).default?.webUtils;
             if (webUtils && typeof webUtils.getPathForFile === 'function') {
                 return webUtils.getPathForFile(file);
             }

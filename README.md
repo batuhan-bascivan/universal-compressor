@@ -1,61 +1,93 @@
 # Universal Compressor
 
-A desktop application for Windows that compresses images, videos, audio files, and documents — all in one place.
+<p align="center">
+  <img src="build/icon.ico" alt="Universal Compressor Logo" width="128" height="128">
+</p>
 
-Built with **Electron**, **React**, **TypeScript**, and **Vite**.
+A desktop application for local file compression across images, video, audio, and documents entirely on your machine.
 
-## Features
+## Description
 
-- **Image compression** — JPG, PNG, WebP, AVIF
-- **Video compression** — MP4, MKV, AVI, MOV, WebM
-- **Audio compression** — MP3, WAV, AAC, OGG, M4A
-- **Document compression** — PDF, DOCX, PPTX, XLSX
-- **3 compression levels** — Low, Balanced, Max
-- **Custom output folder** selection
-- **Dark / Light theme** toggle
-- **Drag & Drop** support
+Universal Compressor provides a streamlined interface for compressing files directly on your local machine. By leveraging Electron, FFmpeg, Sharp, and pdf-lib, the application ensures that no data ever leaves your computer during the process, prioritizing privacy and performance.
+
+### Key Features
+
+*   **Offline Processing:** All compressions are performed locally no upload, no cloud.
+*   **Broad Format Support:** Handles common formats for images, audio, video, and documents.
+*   **3 Compression Levels:** Choose between Low, Balanced, and Max compression.
+*   **Custom Output Folder:** Select any destination directory for your compressed files.
+*   **Drag & Drop:** Simply drop files onto the interface to get started.
+*   **Dark / Light Theme:** Toggle between themes to match your preference.
+*   **Cross-Platform Ready:** Built using Electron for desktop compatibility.
+*   **Modern Interface:** Built with React and Tailwind CSS for a responsive user experience.
+
+## Prerequisites
+
+Ensure you have the following installed:
+
+*   **Node.js** (version 18 or higher)
+*   **npm** (usually bundled with Node.js)
 
 ## Getting Started
 
-### Prerequisites
+### Installation
 
-- [Node.js](https://nodejs.org/) (v18+)
-- npm
-
-### Install
-
-```bash
-npm install
-```
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/batuhan-bascivan/universal-compressor.git
+    ```
+2.  Navigate to the project directory:
+    ```bash
+    cd universal-compressor
+    ```
+3.  Install dependencies:
+    ```bash
+    npm install
+    ```
 
 ### Development
+
+To start the application in development mode:
 
 ```bash
 npm run electron:dev
 ```
 
-This starts the Vite dev server and opens the Electron window.
+This starts the Vite dev server and launches the Electron window automatically.
 
-### Build for Windows
+### Production Build
+
+To build the application for Windows:
 
 ```bash
 npm run electron:build
 ```
 
-Generates an installer (NSIS) and a portable `.exe` in the `release/` folder.
+Generates an NSIS installer and a portable `.exe` in the `release/` folder.
 
-## Tech Stack
+## Supported Formats
 
-| Layer      | Technology                        |
-|------------|-----------------------------------|
-| Frontend   | React 18, TypeScript, Tailwind CSS |
-| Desktop    | Electron                          |
-| Build      | Vite, electron-builder            |
-| Images     | Sharp                             |
-| Video/Audio| FFmpeg (via fluent-ffmpeg)         |
-| PDF        | pdf-lib                           |
-| Office     | JSZip + Sharp                     |
+### Images
+JPG, PNG, WEBP, AVIF
 
-## License
+### Video
+MP4, MKV, AVI, MOV, WEBM
 
-MIT
+### Audio
+MP3, WAV, AAC, OGG, M4A
+
+### Documents
+PDF, DOCX, PPTX, XLSX
+
+## Technical Stack
+
+*   **Electron** — Framework for cross-platform desktop applications.
+*   **React** — UI library for building the user interface.
+*   **TypeScript** — Strongly typed programming language.
+*   **Vite** — Fast build tool and dev server.
+*   **Tailwind CSS** — Utility-first CSS framework.
+*   **Shadcn/ui** — Component library for UI elements.
+*   **FFmpeg** — Multimedia framework for video and audio compression.
+*   **Sharp** — High-performance Node.js image processing library.
+*   **pdf-lib** — PDF manipulation and compression library.
+*   **JSZip** — Library for reading and writing Office file archives.

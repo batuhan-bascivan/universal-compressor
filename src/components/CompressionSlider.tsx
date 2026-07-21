@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@/components/ui/button';
 
 interface CompressionSliderProps {
@@ -6,40 +5,28 @@ interface CompressionSliderProps {
   onPercentageChange: (val: string) => void;
 }
 
-export const CompressionSlider: React.FC<CompressionSliderProps> = ({ percentage, onPercentageChange }) => {
-  const setLevel = (level: number) => {
-    onPercentageChange(level.toString());
-  };
+const LEVELS = [
+  { value: 80, label: 'Low Compression' },
+  { value: 50, label: 'Balanced' },
+  { value: 20, label: 'Max Compression' },
+] as const;
 
+export const CompressionSlider = ({ percentage, onPercentageChange }: CompressionSliderProps) => {
   return (
     <div className="flex flex-col gap-4 mt-2 bg-card p-4 rounded-xl border">
       <div className="grid grid-cols-3 gap-2">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => setLevel(80)}
-          className={percentage === '80' ? 'bg-primary text-primary-foreground' : ''}
-        >
-          Low Compression
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => setLevel(50)}
-          className={percentage === '50' ? 'bg-primary text-primary-foreground' : ''}
-        >
-          Balanced
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => setLevel(20)}
-          className={percentage === '20' ? 'bg-primary text-primary-foreground' : ''}
-        >
-          Max Compression
-        </Button>
+        {LEVELS.map(({ value, label }) => (
+          <Button
+            key={value}
+            variant="outline"
+            size="sm"
+            onClick={() => onPercentageChange(value.toString())}
+            className={`transition-all duration-200 ${percentage === value.toString() ? 'bg-primary text-primary-foreground' : ''}`}
+          >
+            {label}
+          </Button>
+        ))}
       </div>
     </div>
   );
 };
-

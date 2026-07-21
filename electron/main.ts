@@ -33,9 +33,7 @@ function createWindow() {
             webSecurity: false,
         },
     });
-    mainWindow.setMenu(null);
-    mainWindow.setMenuBarVisibility(false);
-    mainWindow.removeMenu();
+
     if (isDev) {
         mainWindow.loadURL('http://localhost:8080');
         mainWindow.webContents.openDevTools();
@@ -150,15 +148,8 @@ ipcMain.handle('compress-file', async (_event, filePath, percentageStr, outputDi
                         .videoBitrate(`${videoKbps}k`)
                         .audioBitrate(`${audioKbps}k`)
                         .outputOptions(['-deadline', 'realtime', '-cpu-used', '8']);
-                } else if (ext === 'avi') {
-                    command = command
-                        .videoCodec('libx264')
-                        .audioCodec('aac')
-                        .videoBitrate(`${videoKbps}k`)
-                        .audioBitrate(`${audioKbps}k`)
-                        .outputOptions(['-preset', 'fast']);
                 } else {
-                    // mp4, mkv, mov
+                    // mp4, mkv, mov, avi
                     command = command
                         .videoCodec('libx264')
                         .audioCodec('aac')

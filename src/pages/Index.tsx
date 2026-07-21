@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import DragDropArea from "@/components/DragDropArea";
 import { CompressionSlider } from "@/components/CompressionSlider";
 import FileCard from "@/components/FileCard";
@@ -21,6 +21,8 @@ declare global {
   }
 }
 
+type MediaType = 'image' | 'video' | 'audio' | 'document';
+
 interface FileToCompress {
   id: string;
   file: File;
@@ -28,27 +30,39 @@ interface FileToCompress {
   type: string;
   size: number;
   progress: number;
-  status: 'pending' | 'uploading' | 'converting' | 'completed' | 'failed';
+  status: 'pending' | 'converting' | 'completed' | 'failed';
   outputFormat: string;
   outputUrl?: string;
-  mediaType?: 'image' | 'video' | 'audio' | 'document';
+  mediaType?: MediaType;
 }
 
-const Index = () => {
-  const [imageFiles, setImageFiles] = useState<FileToCompress[]>([]);
-  const [videoFiles, setVideoFiles] = useState<FileToCompress[]>([]);
-  const [audioFiles, setAudioFiles] = useState<FileToCompress[]>([]);
-  const [documentFiles, setDocumentFiles] = useState<FileToCompress[]>([]);
+const MEDIA_TABS: { type: MediaType; label: string; accept: string; dropLabel: string }[] = [
+  { type: 'image',    label: 'Image',    accept: 'image/*',                              dropLabel: 'Drag & Drop Images here' },
+  { type: 'video',    label: 'Video',    accept: 'video/*',                              dropLabel: 'Drag & Drop Videos here' },
+  { type: 'audio',    label: 'Audio',    accept: 'audio/*',                              dropLabel: 'Drag & Drop Audio files here' },
+  { type: 'document', label: 'Document', accept: 'application/pdf,.doc,.docx,.pptx,.xlsx', dropLabel: 'Drag & Drop Documents here' },
+];
 
-  const [selectedImageLevel, setSelectedImageLevel] = useState<string>("50");
-  const [selectedVideoLevel, setSelectedVideoLevel] = useState<string>("50");
-  const [selectedAudioLevel, setSelectedAudioLevel] = useState<string>("50");
-  const [selectedDocumentLevel, setSelectedDocumentLevel] = useState<string>("50");
+type FilesByType = Record<MediaType, FileToCompress[]>;
+type LevelsByType = Record<MediaType, string>;
+
+const Index = () => {
+  const [filesByType, setFilesByType] = useState<FilesByType>({
+    image: [], video: [], audio: [], document: [],
+  });
+
+  const [levelsByType, setLevelsByType] = useState<LevelsByType>({
+    image: '50', video: '50', audio: '50', document: '50',
+  });
 
   const [destinationFolder, setDestinationFolder] = useState<string | null>(null);
 
+  const updateFiles = useCallback((mediaType: MediaType, updater: (prev: FileToCompress[]) => FileToCompress[]) => {
+    setFilesByType(prev => ({ ...prev, [mediaType]: updater(prev[mediaType]) }));
+  }, []);
+
   const handleSelectDestination = useCallback(async () => {
-    if (window.electron && window.electron.selectDirectory) {
+    if (window.electron?.selectDirectory) {
       const path = await window.electron.selectDirectory();
       if (path) {
         setDestinationFolder(path);
@@ -59,13 +73,8 @@ const Index = () => {
     }
   }, []);
 
-  const handleFilesAdded = useCallback((newFiles: File[], mediaType: 'image' | 'video' | 'audio' | 'document') => {
-    const level =
-      mediaType === 'image' ? selectedImageLevel :
-      mediaType === 'video' ? selectedVideoLevel :
-      mediaType === 'audio' ? selectedAudioLevel :
-      selectedDocumentLevel;
-
+  const handleFilesAdded = useCallback((newFiles: File[], mediaType: MediaType) => {
+    const level = levelsByType[mediaType];
     const filesToAdd: FileToCompress[] = newFiles.map((file) => ({
       id: crypto.randomUUID(),
       file,
@@ -78,48 +87,29 @@ const Index = () => {
       outputFormat: level,
     }));
 
-    if (mediaType === 'image') setImageFiles((prev) => [...prev, ...filesToAdd]);
-    else if (mediaType === 'video') setVideoFiles((prev) => [...prev, ...filesToAdd]);
-    else if (mediaType === 'audio') setAudioFiles((prev) => [...prev, ...filesToAdd]);
-    else setDocumentFiles((prev) => [...prev, ...filesToAdd]);
-
+    updateFiles(mediaType, prev => [...prev, ...filesToAdd]);
     toast.success(`${newFiles.length} ${mediaType} file(s) added!`);
-  }, [selectedImageLevel, selectedVideoLevel, selectedAudioLevel, selectedDocumentLevel]);
+  }, [levelsByType, updateFiles]);
 
-  const handleRemoveFile = useCallback((fileId: string, mediaType: 'image' | 'video' | 'audio' | 'document') => {
-    if (mediaType === 'image') setImageFiles((prev) => prev.filter((f) => f.id !== fileId));
-    else if (mediaType === 'video') setVideoFiles((prev) => prev.filter((f) => f.id !== fileId));
-    else if (mediaType === 'audio') setAudioFiles((prev) => prev.filter((f) => f.id !== fileId));
-    else setDocumentFiles((prev) => prev.filter((f) => f.id !== fileId));
+  const handleRemoveFile = useCallback((fileId: string, mediaType: MediaType) => {
+    updateFiles(mediaType, prev => prev.filter(f => f.id !== fileId));
     toast.info("File removed.");
-  }, []);
+  }, [updateFiles]);
 
-  const handleFormatChange = useCallback((level: string, mediaType: 'image' | 'video' | 'audio' | 'document') => {
-    if (mediaType === 'image') {
-      setSelectedImageLevel(level);
-      setImageFiles((prev) => prev.map((f) => f.status === 'pending' ? { ...f, outputFormat: level } : f));
-    } else if (mediaType === 'video') {
-      setSelectedVideoLevel(level);
-      setVideoFiles((prev) => prev.map((f) => f.status === 'pending' ? { ...f, outputFormat: level } : f));
-    } else if (mediaType === 'audio') {
-      setSelectedAudioLevel(level);
-      setAudioFiles((prev) => prev.map((f) => f.status === 'pending' ? { ...f, outputFormat: level } : f));
-    } else {
-      setSelectedDocumentLevel(level);
-      setDocumentFiles((prev) => prev.map((f) => f.status === 'pending' ? { ...f, outputFormat: level } : f));
-    }
-  }, []);
+  const handleFormatChange = useCallback((level: string, mediaType: MediaType) => {
+    setLevelsByType(prev => ({ ...prev, [mediaType]: level }));
+    updateFiles(mediaType, prev =>
+      prev.map(f => f.status === 'pending' ? { ...f, outputFormat: level } : f)
+    );
+  }, [updateFiles]);
 
   const compressSingleFile = useCallback(async (fileToProcess: FileToCompress): Promise<FileToCompress> => {
-    const updateFileState = (updater: React.SetStateAction<FileToCompress[]>) => {
-      if (fileToProcess.mediaType === 'image') setImageFiles(updater);
-      else if (fileToProcess.mediaType === 'video') setVideoFiles(updater);
-      else if (fileToProcess.mediaType === 'audio') setAudioFiles(updater);
-      else setDocumentFiles(updater);
-    };
+    const mediaType = fileToProcess.mediaType!;
 
     try {
-      updateFileState(prev => prev.map(f => f.id === fileToProcess.id ? { ...f, status: 'converting', progress: 10 } : f));
+      updateFiles(mediaType, prev =>
+        prev.map(f => f.id === fileToProcess.id ? { ...f, status: 'converting', progress: 10 } : f)
+      );
 
       if (!window.electron) {
         throw new Error("Electron API not available. Preload script failed to load.");
@@ -128,7 +118,9 @@ const Index = () => {
       const filePath = window.electron.getFilePath(fileToProcess.file);
       if (!filePath) throw new Error("File path not found. Are you running in Electron?");
 
-      updateFileState(prev => prev.map(f => f.id === fileToProcess.id ? { ...f, progress: 50 } : f));
+      updateFiles(mediaType, prev =>
+        prev.map(f => f.id === fileToProcess.id ? { ...f, progress: 50 } : f)
+      );
 
       const result = await window.electron.compressFile(filePath, fileToProcess.outputFormat, destinationFolder || undefined);
 
@@ -140,22 +132,15 @@ const Index = () => {
       toast.error(`Failed to compress ${fileToProcess.name}: ${error.message}`);
       return { ...fileToProcess, status: 'failed', progress: 0 };
     }
-  }, [destinationFolder]);
+  }, [destinationFolder, updateFiles]);
 
-  const handleCompressAll = useCallback(async (mediaType: 'image' | 'video' | 'audio' | 'document') => {
+  const handleCompressAll = useCallback(async (mediaType: MediaType) => {
     const toastId = toast.loading(`Starting ${mediaType} compression...`);
-    let filesToProcess: FileToCompress[] = [];
-    let setFilesState: React.Dispatch<React.SetStateAction<FileToCompress[]>>;
-
-    if (mediaType === 'image') { filesToProcess = imageFiles; setFilesState = setImageFiles; }
-    else if (mediaType === 'video') { filesToProcess = videoFiles; setFilesState = setVideoFiles; }
-    else if (mediaType === 'audio') { filesToProcess = audioFiles; setFilesState = setAudioFiles; }
-    else { filesToProcess = documentFiles; setFilesState = setDocumentFiles; }
-
+    const filesToProcess = filesByType[mediaType];
     const pendingFiles = filesToProcess.filter(f => f.status === 'pending' || f.status === 'failed');
     const results = await Promise.all(pendingFiles.map(file => compressSingleFile(file)));
 
-    setFilesState(prevFiles =>
+    updateFiles(mediaType, prevFiles =>
       prevFiles.map(oldFile => {
         const newFile = results.find(res => res.id === oldFile.id);
         return newFile || oldFile;
@@ -169,43 +154,34 @@ const Index = () => {
     } else {
       toast.success(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} compression finished successfully!`);
     }
-  }, [imageFiles, videoFiles, audioFiles, documentFiles, compressSingleFile]);
+  }, [filesByType, compressSingleFile, updateFiles]);
 
-  const handleShowInFolder = useCallback(async (fileId: string, mediaType: 'image' | 'video' | 'audio' | 'document') => {
-    let filesArray: FileToCompress[] = [];
-    if (mediaType === 'image') filesArray = imageFiles;
-    else if (mediaType === 'video') filesArray = videoFiles;
-    else if (mediaType === 'audio') filesArray = audioFiles;
-    else filesArray = documentFiles;
-
-    const file = filesArray.find(f => f.id === fileId);
-    if (file && file.outputUrl) {
+  const handleShowInFolder = useCallback(async (fileId: string, mediaType: MediaType) => {
+    const file = filesByType[mediaType].find(f => f.id === fileId);
+    if (file?.outputUrl) {
       await window.electron.showInFolder(file.outputUrl);
     } else {
       toast.error("Could not open folder. Path not found.");
     }
-  }, [imageFiles, videoFiles, audioFiles, documentFiles]);
+  }, [filesByType]);
 
-  const renderFileSection = (
-    files: FileToCompress[],
-    selectedFormat: string,
-    onFormatChange: (format: string) => void,
-    onFilesAdded: (newFiles: File[]) => void,
-    onCompressAll: () => void,
-    onRemoveFile: (fileId: string) => void,
-    onShowInFolder: (fileId: string) => void,
-    dragDropLabel: string,
-    acceptedFileTypes: string,
-  ) => {
+  const renderFileSection = (mediaType: MediaType) => {
+    const files = filesByType[mediaType];
+    const tab = MEDIA_TABS.find(t => t.type === mediaType)!;
     const hasPendingFiles = files.some(f => f.status === 'pending' || f.status === 'failed');
+
     return (
       <div className="flex flex-col gap-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
           <div className="flex flex-col gap-4">
-            <DragDropArea onFilesAdded={onFilesAdded} acceptedFileTypes={acceptedFileTypes} label={dragDropLabel} />
+            <DragDropArea
+              onFilesAdded={(newFiles) => handleFilesAdded(newFiles, mediaType)}
+              acceptedFileTypes={tab.accept}
+              label={tab.dropLabel}
+            />
             <CompressionSlider
-              percentage={selectedFormat}
-              onPercentageChange={onFormatChange}
+              percentage={levelsByType[mediaType]}
+              onPercentageChange={(level) => handleFormatChange(level, mediaType)}
             />
           </div>
           <div className="space-y-4">
@@ -219,8 +195,8 @@ const Index = () => {
                   status={file.status}
                   outputFormat={file.outputFormat}
                   outputUrl={file.outputUrl}
-                  onRemove={() => onRemoveFile(file.id)}
-                  onShowInFolder={() => onShowInFolder(file.id)}
+                  onRemove={() => handleRemoveFile(file.id, mediaType)}
+                  onShowInFolder={() => handleShowInFolder(file.id, mediaType)}
                 />
               ))
             ) : (
@@ -231,7 +207,7 @@ const Index = () => {
           </div>
         </div>
         {files.length > 0 && (
-          <ConvertAllButton onClick={onCompressAll} disabled={!hasPendingFiles} />
+          <ConvertAllButton onClick={() => handleCompressAll(mediaType)} disabled={!hasPendingFiles} />
         )}
       </div>
     );
@@ -240,24 +216,22 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-between p-4 sm:p-8 md:p-12 relative">
       <div className="absolute top-4 right-4 flex gap-2">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleSelectDestination}
-                className="rounded-lg"
-              >
-                <FolderOpen className="h-[1.2rem] w-[1.2rem]" />
-                <span className="sr-only">Select Destination Folder</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{destinationFolder ? `Destination: ${destinationFolder}` : "Select Destination Folder"}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleSelectDestination}
+              className="rounded-lg"
+            >
+              <FolderOpen className="h-[1.2rem] w-[1.2rem]" />
+              <span className="sr-only">Select Destination Folder</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{destinationFolder ? `Destination: ${destinationFolder}` : "Select Destination Folder"}</p>
+          </TooltipContent>
+        </Tooltip>
         <ModeToggle />
       </div>
       <div className="w-full max-w-5xl mx-auto flex flex-col gap-8">
@@ -272,60 +246,16 @@ const Index = () => {
         <main className="flex flex-col gap-8">
           <Tabs defaultValue="image" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="image">Image</TabsTrigger>
-              <TabsTrigger value="video">Video</TabsTrigger>
-              <TabsTrigger value="audio">Audio</TabsTrigger>
-              <TabsTrigger value="document">Document</TabsTrigger>
+              {MEDIA_TABS.map(tab => (
+                <TabsTrigger key={tab.type} value={tab.type}>{tab.label}</TabsTrigger>
+              ))}
             </TabsList>
 
-            <TabsContent value="image" className="mt-8">
-              {renderFileSection(
-                imageFiles, selectedImageLevel,
-                (level) => handleFormatChange(level, 'image'),
-                (newFiles) => handleFilesAdded(newFiles, 'image'),
-                () => handleCompressAll('image'),
-                (fileId) => handleRemoveFile(fileId, 'image'),
-                (fileId) => handleShowInFolder(fileId, 'image'),
-                "Drag & Drop Images here", "image/*",
-              )}
-            </TabsContent>
-
-            <TabsContent value="video" className="mt-8">
-              {renderFileSection(
-                videoFiles, selectedVideoLevel,
-                (level) => handleFormatChange(level, 'video'),
-                (newFiles) => handleFilesAdded(newFiles, 'video'),
-                () => handleCompressAll('video'),
-                (fileId) => handleRemoveFile(fileId, 'video'),
-                (fileId) => handleShowInFolder(fileId, 'video'),
-                "Drag & Drop Videos here", "video/*",
-              )}
-            </TabsContent>
-
-            <TabsContent value="audio" className="mt-8">
-              {renderFileSection(
-                audioFiles, selectedAudioLevel,
-                (level) => handleFormatChange(level, 'audio'),
-                (newFiles) => handleFilesAdded(newFiles, 'audio'),
-                () => handleCompressAll('audio'),
-                (fileId) => handleRemoveFile(fileId, 'audio'),
-                (fileId) => handleShowInFolder(fileId, 'audio'),
-                "Drag & Drop Audios here", "audio/*",
-              )}
-            </TabsContent>
-
-            <TabsContent value="document" className="mt-8">
-              {renderFileSection(
-                documentFiles, selectedDocumentLevel,
-                (level) => handleFormatChange(level, 'document'),
-                (newFiles) => handleFilesAdded(newFiles, 'document'),
-                () => handleCompressAll('document'),
-                (fileId) => handleRemoveFile(fileId, 'document'),
-                (fileId) => handleShowInFolder(fileId, 'document'),
-                "Drag & Drop Documents here",
-                "application/pdf,.doc,.docx,.pptx,.xlsx",
-              )}
-            </TabsContent>
+            {MEDIA_TABS.map(tab => (
+              <TabsContent key={tab.type} value={tab.type} className="mt-8">
+                {renderFileSection(tab.type)}
+              </TabsContent>
+            ))}
           </Tabs>
         </main>
       </div>

@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "description": "A universal file compressor for Windows",
-  "author": "Local User",
+  "author": "batuhan-bascivan",
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
