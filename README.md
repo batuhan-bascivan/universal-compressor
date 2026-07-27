@@ -1,22 +1,22 @@
-# Universal Compressor
+# Universal Converter
 
 <p align="center">
-  <img src="build/icon.ico" alt="Universal Compressor Logo" width="128" height="128">
+  <img src="build/icon.ico" alt="Universal Converter Logo" width="128" height="128">
 </p>
 
-A desktop application for local file compression across images, video, audio, and documents entirely on your machine.
+A desktop application for local file conversion across images, video, audio, and documents entirely on your machine.
 
 ## Description
 
-Universal Compressor provides a streamlined interface for compressing files directly on your local machine. By leveraging Electron, FFmpeg, Sharp, and pdf-lib, the application ensures that no data ever leaves your computer during the process, prioritizing privacy and performance.
+Universal Converter provides a streamlined interface for converting files directly on your local machine. By leveraging Electron, FFmpeg, Sharp, and Mammoth, the application ensures that no data ever leaves your computer during the process, prioritizing privacy and performance.
 
 ### Key Features
 
-*   **Offline Processing:** All compressions are performed locally no upload, no cloud.
-*   **Broad Format Support:** Handles common formats for images, audio, video, and documents.
-*   **3 Compression Levels:** Choose between Low, Balanced, and Max compression.
-*   **Custom Output Folder:** Select any destination directory for your compressed files.
+*   **Offline Processing:** All conversions are performed locally no upload, no cloud.
+*   **Broad Format Support:** Handles common and professional formats for images, audio, video, and documents.
+*   **Custom Output Folder:** Select any destination directory for your converted files.
 *   **Drag & Drop:** Simply drop files onto the interface to get started.
+*   **Batch Conversion:** Convert multiple files at once with a single click.
 *   **Dark / Light Theme:** Toggle between themes to match your preference.
 *   **Cross-Platform Ready:** Built using Electron for desktop compatibility.
 *   **Modern Interface:** Built with React and Tailwind CSS for a responsive user experience.
@@ -34,11 +34,11 @@ Ensure you have the following installed:
 
 1.  Clone the repository:
     ```bash
-    git clone https://github.com/batuhan-bascivan/universal-compressor.git
+    git clone https://github.com/batuhan-bascivan/universal-converter.git
     ```
 2.  Navigate to the project directory:
     ```bash
-    cd universal-compressor
+    cd universal-converter
     ```
 3.  Install dependencies:
     ```bash
@@ -68,16 +68,16 @@ Generates an NSIS installer and a portable `.exe` in the `release/` folder.
 ## Supported Formats
 
 ### Images
-JPG, PNG, WEBP, AVIF
+JPG, PNG, WEBP, GIF, BMP, TIFF, ICO, PDF
 
 ### Video
-MP4, MKV, AVI, MOV, WEBM
+MP4, MOV, AVI, MKV, WEBM, FLV, WMV
 
 ### Audio
-MP3, WAV, AAC, OGG, M4A
+MP3, WAV, AAC, OGG, FLAC, M4A, WMA
 
 ### Documents
-PDF, DOCX, PPTX, XLSX
+PDF, DOCX, TXT, HTML, ODT
 
 ## Technical Stack
 
@@ -87,7 +87,8 @@ PDF, DOCX, PPTX, XLSX
 *   **Vite** — Fast build tool and dev server.
 *   **Tailwind CSS** — Utility-first CSS framework.
 *   **Shadcn/ui** — Component library for UI elements.
-*   **FFmpeg** — Multimedia framework for video and audio compression.
+*   **FFmpeg** — Multimedia framework for video and audio conversion.
 *   **Sharp** — High-performance Node.js image processing library.
-*   **pdf-lib** — PDF manipulation and compression library.
-*   **JSZip** — Library for reading and writing Office file archives.
+*   **Mammoth** — DOCX to HTML/text extraction library.
+*   **pdf-parse** — PDF text extraction library.
+*   **docx** — Library for generating Word documents.
