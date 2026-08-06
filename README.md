@@ -1,8 +1,5 @@
 # Universal Converter
 
-<p align="center">
-  <img src="build/icon.ico" alt="Universal Converter Logo" width="128" height="128">
-</p>
 
 A desktop application for local file conversion across images, video, audio, and documents entirely on your machine.
 
