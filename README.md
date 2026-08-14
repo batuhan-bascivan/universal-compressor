@@ -1,7 +1,5 @@
 # Universal Converter
 
-[Download Latest Release](https://github.com/batuhan-bascivan/universal-converter/releases/latest)
-
 A desktop application for local file conversion across images, video, audio, and documents entirely on your machine.
 
 ## Description
