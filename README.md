@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="src/assets/logo.svg" alt="Universal Compressor Logo" width="64" height="64" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="src/assets/logo-white.svg">
+    <img src="src/assets/logo.svg" alt="Universal Compressor Logo" width="64" height="64" />
+  </picture>
 </p>
 
 # Universal Compressor
