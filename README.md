@@ -1,8 +1,13 @@
+<p align="center">
+  <img src="public/logo.svg" alt="Universal Compressor Logo" width="64" height="64" />
+</p>
+
 # Universal Compressor
 
 [Download Latest Release](https://github.com/batuhan-bascivan/universal-compressor/releases/latest)
 
 A desktop application for local file compression across images, video, audio, and documents entirely on your machine.
+
 
 ## Description
 
