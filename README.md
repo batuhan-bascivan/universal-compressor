@@ -1,3 +1,5 @@
+# Universal Compressor
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="src/assets/logo-white.svg">
@@ -5,12 +7,9 @@
   </picture>
 </p>
 
-# Universal Compressor
-
-[Download Latest Release](https://github.com/batuhan-bascivan/universal-compressor/releases/latest)
-
 A desktop application for local file compression across images, video, audio, and documents entirely on your machine.
 
+[Download Latest Release](https://github.com/batuhan-bascivan/universal-compressor/releases/latest)
 
 ## Description
 
