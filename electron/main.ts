@@ -9,7 +9,7 @@ import JSZip from 'jszip';
 import { PDFDocument } from 'pdf-lib';
 
 const isDev = !app.isPackaged;
-const appIcon = path.join(__dirname, '../build/icon.ico');
+const appIcon = path.join(app.getAppPath(), 'build/icon.ico');
 
 if (ffmpegPath) {
     ffmpeg.setFfmpegPath(ffmpegPath.replace('app.asar', 'app.asar.unpacked'));

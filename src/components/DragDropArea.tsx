@@ -34,15 +34,12 @@ const DragDropArea: React.FC<DragDropAreaProps> = ({ onFilesAdded, acceptedFileT
     if (acceptedFileTypes === "*/*") return true;
     return acceptedFileTypes.split(',').some(type => {
       const trimmedType = type.trim();
-      // Match by extension (e.g. ".docx", ".pptx")
       if (trimmedType.startsWith('.')) {
         return file.name.toLowerCase().endsWith(trimmedType.toLowerCase());
       }
-      // Match by wildcard MIME (e.g. "image/*")
       if (trimmedType.endsWith('/*')) {
         return file.type.startsWith(trimmedType.slice(0, -1));
       }
-      // Match by exact MIME type
       return file.type === trimmedType;
     });
   }, [acceptedFileTypes]);

@@ -59,6 +59,7 @@
   }
 }
 
+
 @layer base {
   * {
     @apply border-border;
@@ -67,4 +68,13 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Logo adaptatif selon le thème */
+.app-logo {
+  color: #111111;
+}
+
+.dark .app-logo {
+  color: #ffffff;
 }

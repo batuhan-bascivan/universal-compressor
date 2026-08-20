@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/logo.svg" alt="Universal Compressor Logo" width="64" height="64" />
+  <img src="src/assets/logo.svg" alt="Universal Compressor Logo" width="64" height="64" />
 </p>
 
 # Universal Compressor
@@ -66,7 +66,8 @@ To build the application for Windows:
 npm run electron:build
 ```
 
-Generates an NSIS installer and a portable `.exe` in the `release/` folder.
+Generates a portable `.exe` in the `release/` folder.
+
 
 ## Technical Stack
 

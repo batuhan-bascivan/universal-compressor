@@ -10,6 +10,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "generate:icon": "node scripts/generate-icon.mjs",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:8080 && tsc -p tsconfig.electron.json && node fix-electron-build.js && electron .\"",
     "electron:build": "npm run build:win",
     "build:win": "tsc -p tsconfig.electron.json && node fix-electron-build.js && vite build && electron-builder --win"
@@ -28,25 +29,15 @@
     "win": {
       "target": [
         {
-          "target": "nsis",
-          "arch": ["x64"]
-        },
-        {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.ico"
     },
-    "nsis": {
-      "oneClick": false,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Universal Compressor",
-      "deleteAppDataOnUninstall": true
-    },
+
     "portable": {
       "artifactName": "${productName} Portable.${ext}"
     }
@@ -91,6 +82,7 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
+    "png-to-ico": "^3.0.2",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",

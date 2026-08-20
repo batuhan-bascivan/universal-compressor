@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import logoSvg from "@/assets/logo.svg";
 import { FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -37,9 +38,9 @@ interface FileToCompress {
 }
 
 const MEDIA_TABS: { type: MediaType; label: string; accept: string; dropLabel: string }[] = [
-  { type: 'image',    label: 'Image',    accept: 'image/*',                              dropLabel: 'Drag & Drop Images here' },
-  { type: 'video',    label: 'Video',    accept: 'video/*',                              dropLabel: 'Drag & Drop Videos here' },
-  { type: 'audio',    label: 'Audio',    accept: 'audio/*',                              dropLabel: 'Drag & Drop Audio files here' },
+  { type: 'image',    label: 'Image',    accept: 'image/*',                               dropLabel: 'Drag & Drop Images here' },
+  { type: 'video',    label: 'Video',    accept: 'video/*',                               dropLabel: 'Drag & Drop Videos here' },
+  { type: 'audio',    label: 'Audio',    accept: 'audio/*',                               dropLabel: 'Drag & Drop Audio files here' },
   { type: 'document', label: 'Document', accept: 'application/pdf,.doc,.docx,.pptx,.xlsx', dropLabel: 'Drag & Drop Documents here' },
 ];
 
@@ -88,7 +89,7 @@ const Index = () => {
     }));
 
     updateFiles(mediaType, prev => [...prev, ...filesToAdd]);
-    toast.success(`${newFiles.length} ${mediaType} file(s) added!`);
+    toast.success(`${newFiles.length} ${mediaType} file(s) added.`);
   }, [levelsByType, updateFiles]);
 
   const handleRemoveFile = useCallback((fileId: string, mediaType: MediaType) => {
@@ -135,7 +136,7 @@ const Index = () => {
   }, [destinationFolder, updateFiles]);
 
   const handleCompressAll = useCallback(async (mediaType: MediaType) => {
-    const toastId = toast.loading(`Starting ${mediaType} compression...`);
+    const toastId = toast.loading(`Compressing ${mediaType} files...`);
     const filesToProcess = filesByType[mediaType];
     const pendingFiles = filesToProcess.filter(f => f.status === 'pending' || f.status === 'failed');
     const results = await Promise.all(pendingFiles.map(file => compressSingleFile(file)));
@@ -152,7 +153,7 @@ const Index = () => {
     if (failedCount > 0) {
       toast.error(`${failedCount} ${mediaType} file(s) failed to compress.`);
     } else {
-      toast.success(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} compression finished successfully!`);
+      toast.success(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} compression completed successfully.`);
     }
   }, [filesByType, compressSingleFile, updateFiles]);
 
@@ -215,26 +216,32 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-between p-4 sm:p-8 md:p-12 relative">
-      <div className="absolute top-4 right-4 flex gap-2">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleSelectDestination}
-              className="rounded-lg"
-            >
-              <FolderOpen className="h-[1.2rem] w-[1.2rem]" />
-              <span className="sr-only">Select Destination Folder</span>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{destinationFolder ? `Destination: ${destinationFolder}` : "Select Destination Folder"}</p>
-          </TooltipContent>
-        </Tooltip>
-        <ModeToggle />
+      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 h-14 border-b border-border bg-background/80 backdrop-blur-md">
+        <div className="flex items-center gap-2">
+          <img src={logoSvg} alt="Universal Compressor Logo" className="app-logo h-7 w-7" />
+          <span className="font-semibold text-sm text-foreground hidden sm:block">Universal Compressor</span>
+        </div>
+        <div className="flex gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleSelectDestination}
+                className="rounded-lg"
+              >
+                <FolderOpen className="h-[1.2rem] w-[1.2rem]" />
+                <span className="sr-only">Select Destination Folder</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{destinationFolder ? `Destination: ${destinationFolder}` : "Select Destination Folder"}</p>
+            </TooltipContent>
+          </Tooltip>
+          <ModeToggle />
+        </div>
       </div>
-      <div className="w-full max-w-5xl mx-auto flex flex-col gap-8">
+      <div className="w-full max-w-5xl mx-auto flex flex-col gap-8 mt-14">
         <header className="text-center">
           <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-2">
             Universal Compressor
