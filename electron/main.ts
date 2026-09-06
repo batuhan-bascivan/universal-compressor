@@ -9,7 +9,9 @@ import JSZip from 'jszip';
 import { PDFDocument } from 'pdf-lib';
 
 const isDev = !app.isPackaged;
+
 const appIcon = path.join(app.getAppPath(), 'build/icon.ico');
+const resolvedIcon = fs.existsSync(appIcon) ? appIcon : path.join(app.getAppPath(), 'build/newlogo.png');
 
 if (ffmpegPath) {
     ffmpeg.setFfmpegPath(ffmpegPath.replace('app.asar', 'app.asar.unpacked'));
@@ -23,7 +25,7 @@ function createWindow() {
     const mainWindow = new BrowserWindow({
         width: 1000,
         height: 800,
-        icon: appIcon,
+        icon: resolvedIcon,
         autoHideMenuBar: true,
         webPreferences: {
             preload: preloadPath,
@@ -33,6 +35,10 @@ function createWindow() {
             webSecurity: false,
         },
     });
+
+    mainWindow.setMenu(null);
+    mainWindow.setMenuBarVisibility(false);
+    mainWindow.removeMenu();
 
     if (isDev) {
         mainWindow.loadURL('http://localhost:8080');
@@ -149,7 +155,7 @@ ipcMain.handle('compress-file', async (_event, filePath, percentageStr, outputDi
                         .audioBitrate(`${audioKbps}k`)
                         .outputOptions(['-deadline', 'realtime', '-cpu-used', '8']);
                 } else {
-                    // mp4, mkv, mov, avi
+
                     command = command
                         .videoCodec('libx264')
                         .audioCodec('aac')
@@ -169,7 +175,7 @@ ipcMain.handle('compress-file', async (_event, filePath, percentageStr, outputDi
             await new Promise((resolve, reject) => {
                 let command = ffmpeg(filePath);
                 if (ext === 'wav') {
-                    // WAV is uncompressed: reduce sample rate based on percentage
+
                     const sampleRates = [8000, 16000, 22050, 44100, 48000];
                     const idx = Math.min(sampleRates.length - 1, Math.floor((percentage / 100) * (sampleRates.length - 1)));
                     const targetSampleRate = sampleRates[idx];
@@ -186,7 +192,7 @@ ipcMain.handle('compress-file', async (_event, filePath, percentageStr, outputDi
                         .audioCodec('aac')
                         .audioBitrate(`${audioKbps}k`);
                 } else {
-                    // mp3 and others
+
                     command = command
                         .audioBitrate(`${audioKbps}k`);
                 }
@@ -198,7 +204,7 @@ ipcMain.handle('compress-file', async (_event, filePath, percentageStr, outputDi
         } else if (ext === 'pdf') {
             const pdfData = fs.readFileSync(filePath);
             const doc = await PDFDocument.load(pdfData, { ignoreEncryption: true });
-            // Re-save with object streams for smaller size
+
             const savedPdf = await doc.save({ useObjectStreams: true });
             fs.writeFileSync(outputPath, savedPdf);
         } else if (officeFormats.includes(ext)) {

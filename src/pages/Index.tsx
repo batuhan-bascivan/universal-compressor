@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import logoSvg from "@/assets/logo.svg";
+import logoPng from "@/assets/newlogo.png";
 import { FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -218,7 +218,7 @@ const Index = () => {
     <div className="min-h-screen flex flex-col items-center justify-between p-4 sm:p-8 md:p-12 relative">
       <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 h-14 border-b border-border bg-background/80 backdrop-blur-md">
         <div className="flex items-center gap-2">
-          <img src={logoSvg} alt="Universal Compressor Logo" className="app-logo h-7 w-7" />
+          <img src={logoPng} alt="Universal Compressor Logo" className="app-logo h-7 w-7 object-contain invert dark:invert-0" />
           <span className="font-semibold text-sm text-foreground hidden sm:block">Universal Compressor</span>
         </div>
         <div className="flex gap-2">
