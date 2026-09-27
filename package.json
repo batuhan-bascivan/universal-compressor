@@ -10,9 +10,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:8080 && tsc -p tsconfig.electron.json && node fix-electron-build.js && electron .\"",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:8080 && tsc -p tsconfig.electron.json && node -e \"require('fs').mkdirSync(require('path').resolve('dist-electron'),{recursive:true}),require('fs').writeFileSync(require('path').join(require('path').resolve('dist-electron'),'package.json'),JSON.stringify({type:'commonjs'}))\" && electron .\"",
     "electron:build": "npm run build:win",
-    "build:win": "tsc -p tsconfig.electron.json && node fix-electron-build.js && vite build && electron-builder --win"
+    "build:win": "tsc -p tsconfig.electron.json && node -e \"require('fs').mkdirSync(require('path').resolve('dist-electron'),{recursive:true}),require('fs').writeFileSync(require('path').join(require('path').resolve('dist-electron'),'package.json'),JSON.stringify({type:'commonjs'}))\" && vite build && electron-builder --win"
   },
   "build": {
     "appId": "com.universal.compressor",
