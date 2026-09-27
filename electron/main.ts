@@ -11,7 +11,7 @@ import { PDFDocument } from 'pdf-lib';
 const isDev = !app.isPackaged;
 
 const appIcon = path.join(app.getAppPath(), 'build/icon.ico');
-const resolvedIcon = fs.existsSync(appIcon) ? appIcon : path.join(app.getAppPath(), 'build/newlogo.png');
+const resolvedIcon = fs.existsSync(appIcon) ? appIcon : undefined;
 
 if (ffmpegPath) {
     ffmpeg.setFfmpegPath(ffmpegPath.replace('app.asar', 'app.asar.unpacked'));

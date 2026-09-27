@@ -2,8 +2,8 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="src/assets/newlogo.png">
-    <img src="src/assets/newlogo-black.png" alt="Universal Compressor Logo" width="128" height="128" />
+    <source media="(prefers-color-scheme: dark)" srcset="build/newlogo-black.png">
+    <img src="build/newlogo-black.png" alt="Universal Compressor Logo" width="128" height="128" />
   </picture>
 </p>
 
