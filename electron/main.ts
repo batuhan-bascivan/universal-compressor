@@ -241,16 +241,16 @@ ipcMain.handle('compress-file', async (_event, filePath, percentageStr, outputDi
             );
         } else {
             outputPath = path.join(finalOutputDir, `${baseName}_compressed.zip`);
-            const archiver = require('archiver');
-            await new Promise((resolve, reject) => {
-                const output = fs.createWriteStream(outputPath);
-                const archive = archiver('zip', { zlib: { level: 9 } });
-                output.on('close', () => resolve(outputPath));
-                archive.on('error', (err: Error) => reject(err));
-                archive.pipe(output);
-                archive.file(filePath, { name: path.basename(filePath) });
-                archive.finalize();
-            });
+            const fallbackZip = new JSZip();
+            fallbackZip.file(path.basename(filePath), fs.readFileSync(filePath));
+            fs.writeFileSync(
+                outputPath,
+                await fallbackZip.generateAsync({
+                    type: 'nodebuffer',
+                    compression: 'DEFLATE',
+                    compressionOptions: { level: 9 },
+                })
+            );
         }
         shell.showItemInFolder(outputPath);
         return { success: true, path: outputPath };

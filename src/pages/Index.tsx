@@ -2,7 +2,6 @@ import { useState, useCallback } from "react";
 import logoPng from "@/assets/newlogo.png";
 import { FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import DragDropArea from "@/components/DragDropArea";
 import { CompressionSlider } from "@/components/CompressionSlider";
 import FileCard from "@/components/FileCard";
@@ -222,22 +221,16 @@ const Index = () => {
           <span className="font-semibold text-sm text-foreground hidden sm:block">Universal Compressor</span>
         </div>
         <div className="flex gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleSelectDestination}
-                className="rounded-lg"
-              >
-                <FolderOpen className="h-[1.2rem] w-[1.2rem]" />
-                <span className="sr-only">Select Destination Folder</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{destinationFolder ? `Destination: ${destinationFolder}` : "Select Destination Folder"}</p>
-            </TooltipContent>
-          </Tooltip>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleSelectDestination}
+            className="rounded-lg"
+            title={destinationFolder ? `Destination: ${destinationFolder}` : "Select Destination Folder"}
+          >
+            <FolderOpen className="h-[1.2rem] w-[1.2rem]" />
+            <span className="sr-only">Select Destination Folder</span>
+          </Button>
           <ModeToggle />
         </div>
       </div>
